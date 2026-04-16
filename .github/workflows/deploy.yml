@@ -36,4 +36,4 @@ jobs:
             sudo docker ps -aq --filter "name=sample_app" | xargs -r sudo docker rm
             
             # Run fresh container
-            sudo docker run -d -p 3002:3002 --name sample_app ${{ secrets.DOCKER_USERNAME }}/sample_app
+            sudo docker run -d -p 3001:3001 --name sample_app ${{ secrets.DOCKER_USERNAME }}/sample_app
