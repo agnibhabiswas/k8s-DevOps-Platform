@@ -1,17 +1,23 @@
 const express = require('express');
-const router = express.Router();
+const path = require('path');
 
-router.get('/', (req, res) => {
-  res.json({
-    app: process.env.APP_NAME || 'sample-app',
-    version: require('../../package.json').version,
-    message: 'Welcome to the Sample App',
-  });
+const app = express();
+
+// ✅ Serve static frontend
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Optional API route
+app.get('/api', (req, res) => {
+  res.json({ message: "Backend working 🚀" });
 });
 
-// Health check — used by AWS ELB / ECS health checks
-router.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// ✅ Serve index.html for root
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-module.exports = router;
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
