@@ -29,11 +29,23 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_KEY }}
           script: |
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/sample_app
-            
-            # Stop all containers using port (safe cleanup)
-            sudo docker ps -q --filter "name=sample_app" | xargs -r sudo docker stop
-            sudo docker ps -aq --filter "name=sample_app" | xargs -r sudo docker rm
-            
-            # Run fresh container
-            sudo docker run -d -p 3001:3001 --name sample_app ${{ secrets.DOCKER_USERNAME }}/sample_app
+            # create network (safe if exists)
+            sudo docker network create my-network || true
+
+            # run mongo if not exists
+            sudo docker ps -a --format '{{.Names}}' | grep -q '^mongo$' || \
+            sudo docker run -d --name mongo --network my-network mongo:6
+
+            # stop old app
+            sudo docker stop sample_app || true
+            sudo docker rm sample_app || true
+
+            # pull latest image
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/sample_app:latest
+
+            # run app with DB connection
+            sudo docker run -d -p 3001:3001 \
+              --name sample_app \
+              --network my-network \
+              -e MONGO_URI=mongodb://mongo:27017/sample_app \
+              ${{ secrets.DOCKER_USERNAME }}/sample_app:latest
